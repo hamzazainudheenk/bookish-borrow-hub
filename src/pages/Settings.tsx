@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
@@ -23,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileTab } from "@/components/settings/ProfileTab";
 
 const Settings = () => {
   const { user, isAdmin } = useAuth();
@@ -32,10 +31,6 @@ const Settings = () => {
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
-  });
-  const [profileForm, setProfileForm] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
   });
   const [emailNotifications, setEmailNotifications] = useState({
     dueDateReminders: true,
@@ -85,20 +80,6 @@ const Settings = () => {
     }, 1000);
   };
   
-  const handleProfileUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsUpdating(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description: "Profile updated successfully",
-      });
-      setIsUpdating(false);
-    }, 1000);
-  };
-  
   const handleNotificationUpdate = () => {
     setIsUpdating(true);
     
@@ -130,48 +111,8 @@ const Settings = () => {
                   Update your profile details and public information
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center gap-6">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback className="text-2xl">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <Button variant="outline">Change Avatar</Button>
-                </div>
-                
-                <form onSubmit={handleProfileUpdate}>
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Name</Label>
-                      <Input 
-                        id="name" 
-                        value={profileForm.name}
-                        onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        value={profileForm.email}
-                        onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="role">Role</Label>
-                      <Input id="role" value={user?.role === "admin" ? "Administrator" : "User"} disabled />
-                    </div>
-                    
-                    <Button type="submit" disabled={isUpdating}>
-                      {isUpdating ? "Updating..." : "Update Profile"}
-                    </Button>
-                  </div>
-                </form>
+              <CardContent>
+                <ProfileTab />
               </CardContent>
             </Card>
           </TabsContent>

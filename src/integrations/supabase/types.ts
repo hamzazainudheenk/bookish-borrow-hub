@@ -138,6 +138,47 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          address: string | null
+          bio: string | null
+          date_of_birth: string | null
+          id: string
+          phone_number: string | null
+          preferences: Json | null
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          date_of_birth?: string | null
+          id: string
+          phone_number?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          date_of_birth?: string | null
+          id?: string
+          phone_number?: string | null
+          preferences?: Json | null
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requested_books: {
         Row: {
           book_id: string | null

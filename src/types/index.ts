@@ -56,3 +56,15 @@ export interface ReadingHistory {
   review?: string;
   book: Book;
 }
+
+export interface UserProfile {
+  id: string;
+  userId: string;
+  website?: string;
+  address?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  bio?: string;
+  preferences?: Record<string, any>;
+  updatedAt: string;
+}
