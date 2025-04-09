@@ -41,9 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Book, History, Search, Star } from "lucide-react";
+import { Book, History as HistoryIcon, Search, Star } from "lucide-react";
 
-const History = () => {
+const ReadingHistoryPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [readingHistory, setReadingHistory] = useState<ReadingHistoryType[]>([]);
@@ -126,8 +126,8 @@ const History = () => {
     fetchReadingHistory();
   }, [user, toast]);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleSearch = (query: string) => {
+    setSearchTerm(query);
   };
 
   const filteredHistory = readingHistory.filter(history => 
@@ -186,7 +186,7 @@ const History = () => {
     >
       <div className="space-y-6">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <History className="h-4 w-4" />
+          <HistoryIcon className="h-4 w-4" />
           <span>Your reading records</span>
         </div>
 
@@ -338,4 +338,4 @@ const History = () => {
   );
 };
 
-export default History;
+export default ReadingHistoryPage;

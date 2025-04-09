@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export const ProfileTab = () => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  useState(() => {
+  useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.id) return;
       setIsLoading(true);

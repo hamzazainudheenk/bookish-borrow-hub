@@ -20,7 +20,7 @@ import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Index from "./pages/Index";
 import DatabaseTables from "./pages/DatabaseTables";
-import History from "./pages/History";
+import ReadingHistoryPage from "./pages/History";
 
 const queryClient = new QueryClient();
 
@@ -42,7 +42,7 @@ const App = () => (
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/database" element={<DatabaseTables />} />
-                <Route path="/history" element={<History />} />
+                <Route path="/history" element={<ReadingHistoryPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
