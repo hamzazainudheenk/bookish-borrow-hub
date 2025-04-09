@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -30,25 +31,18 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 221.2 83.2% 53.3%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
   }
 
   .dark {
@@ -61,7 +55,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -78,15 +72,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -98,4 +84,88 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.dashboard-stat {
+  @apply p-5 rounded-lg bg-white shadow-sm border border-gray-100;
+}
+
+.dashboard-stat-number {
+  @apply text-4xl font-bold;
+}
+
+.dashboard-stat-label {
+  @apply text-sm text-gray-500;
+}
+
+.stat-up {
+  @apply text-library-success text-sm font-medium flex items-center;
+}
+
+.stat-down {
+  @apply text-library-danger text-sm font-medium flex items-center;
+}
+
+.sidebar-link {
+  @apply flex items-center gap-3 px-4 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent transition-colors;
+}
+
+.sidebar-link.active {
+  @apply bg-sidebar-accent font-medium;
+}
+
+.sidebar-icon {
+  @apply w-5 h-5;
+}
+
+.data-table {
+  @apply w-full text-sm;
+}
+
+.data-table th {
+  @apply px-4 py-2 text-left font-medium text-gray-500 border-b;
+}
+
+.data-table td {
+  @apply px-4 py-3 border-b border-gray-100;
+}
+
+.badge-warning {
+  @apply bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded;
+}
+
+.badge-success {
+  @apply bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded;
+}
+
+.badge-danger {
+  @apply bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded;
+}
+
+.pagination {
+  @apply flex items-center gap-1;
+}
+
+.pagination-item {
+  @apply px-3 py-1 rounded-md hover:bg-gray-100;
+}
+
+.pagination-item.active {
+  @apply bg-primary text-white hover:bg-primary/90;
+}
+
+.book-card {
+  @apply border rounded-lg overflow-hidden hover:shadow-md transition-shadow;
+}
+
+.book-card img {
+  @apply w-full h-48 object-cover;
+}
+
+.book-card-body {
+  @apply p-4;
+}
+
+.user-avatar {
+  @apply w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm;
 }
