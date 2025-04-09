@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Index from "./pages/Index";
+import DatabaseTables from "./pages/DatabaseTables";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
                 <Route path="/requested" element={<RequestedBooks />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/users" element={<Users />} />
+                <Route path="/database" element={<DatabaseTables />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

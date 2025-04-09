@@ -11,7 +11,8 @@ import {
   HelpCircle, 
   LogOut, 
   History, 
-  User 
+  User, 
+  Database 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -72,6 +73,11 @@ export const Sidebar = () => {
           <NavLink to="/history" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
             <History className="sidebar-icon" />
             {!collapsed && <span>Reading History</span>}
+          </NavLink>
+          
+          <NavLink to="/database" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
+            <Database className="sidebar-icon" />
+            {!collapsed && <span>Database Tables</span>}
           </NavLink>
           
           {isAdmin && (
