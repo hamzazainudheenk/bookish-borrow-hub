@@ -3,10 +3,10 @@ import { Book, BorrowedBook, RequestedBook, User } from "@/types";
 import { Database } from "@/integrations/supabase/types";
 
 // Type aliases for Supabase table rows
-type DbBook = Database['public']['Tables']['books']['Row'];
-type DbMember = Database['public']['Tables']['members']['Row'];
-type DbBorrowedBook = Database['public']['Tables']['borrowed_books']['Row'];
-type DbRequestedBook = Database['public']['Tables']['requested_books']['Row'];
+type DbBook = Database["public"]["Tables"]["books"]["Row"];
+type DbMember = Database["public"]["Tables"]["members"]["Row"];
+type DbBorrowedBook = Database["public"]["Tables"]["borrowed_books"]["Row"];
+type DbRequestedBook = Database["public"]["Tables"]["requested_books"]["Row"];
 
 // Functions to convert from Supabase types to our application types
 export function mapDbBookToBook(dbBook: DbBook): Book {
