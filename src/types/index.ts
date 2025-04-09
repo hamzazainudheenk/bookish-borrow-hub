@@ -19,6 +19,8 @@ export interface Book {
   coverImage?: string;
   description?: string;
   location?: string;
+  rating?: number;
+  ratingCount?: number;
 }
 
 export interface BorrowedBook {
@@ -31,6 +33,7 @@ export interface BorrowedBook {
   status: 'borrowed' | 'returned' | 'overdue';
   book: Book;
   user?: User;
+  renewsLeft?: number;
 }
 
 export interface RequestedBook {
@@ -41,4 +44,15 @@ export interface RequestedBook {
   status: 'pending' | 'approved' | 'rejected';
   book: Book;
   user: User;
+}
+
+export interface ReadingHistory {
+  id: string;
+  userId: string;
+  bookId: string;
+  startDate: string;
+  finishDate?: string;
+  rating?: number;
+  review?: string;
+  book: Book;
 }

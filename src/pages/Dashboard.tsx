@@ -2,12 +2,11 @@
 import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useBooks } from "@/context/BookContext";
-import { ArrowDownIcon, ArrowUpIcon, FilterIcon, RefreshCwIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { ArrowUpIcon, BookOpen, Calendar, Clock } from "lucide-react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -19,75 +18,122 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  DropdownMenu,
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { BorrowedBook, Book } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BorrowedBook } from "@/types";
 
 const Dashboard = () => {
-  const { books, borrowedBooks, requestedBooks } = useBooks();
-  const [timeRange, setTimeRange] = useState("7");
-  const [overdueBooks, setOverdueBooks] = useState<BorrowedBook[]>([]);
+  const { user, isAdmin } = useAuth();
+  const { books, borrowedBooks, requestedBooks, getUserBorrowedBooks } = useBooks();
+  const [timeRange, setTimeRange] = useState("all");
+  const [userBorrowedBooks, setUserBorrowedBooks] = useState<BorrowedBook[]>([]);
+  const [recommendedBooks, setRecommendedBooks] = useState<Book[]>([]);
+  const [booksRead, setBooksRead] = useState(27);
+  const [currentlyBorrowed, setCurrentlyBorrowed] = useState(0);
+  const [nextDueDate, setNextDueDate] = useState<{date: string, daysRemaining: number} | null>(null);
   
-  // Calculate statistics
-  const totalBooks = books.length;
-  const availableBooks = books.reduce((acc, book) => acc + book.availableCopies, 0);
-  const borrowedCount = borrowedBooks.filter(b => b.status === "borrowed").length;
-  const pendingRequests = requestedBooks.filter(r => r.status === "pending").length;
-  
+  // Get user data on component mount
   useEffect(() => {
-    // Get overdue books
-    const today = new Date();
-    const overdue = borrowedBooks.filter(book => {
-      if (book.status !== "borrowed") return false;
-      const dueDate = new Date(book.dueDate);
-      return dueDate < today;
+    if (!isAdmin) {
+      // Regular user dashboard
+      const userBooks = getUserBorrowedBooks();
+      setUserBorrowedBooks(userBooks);
+      setCurrentlyBorrowed(userBooks.filter(b => b.status === "borrowed").length);
+      
+      // Find next due date
+      const borrowedItems = userBooks.filter(b => b.status === "borrowed");
+      if (borrowedItems.length > 0) {
+        // Sort by due date
+        borrowedItems.sort((a, b) => 
+          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        );
+        
+        const nextDue = borrowedItems[0];
+        const dueDate = new Date(nextDue.dueDate);
+        const today = new Date();
+        const diffTime = dueDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        setNextDueDate({
+          date: nextDue.dueDate,
+          daysRemaining: diffDays
+        });
+      }
+      
+      // Generate recommended books
+      const recommendedSample = books
+        .filter(book => !userBooks.some(b => b.bookId === book.id))
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 4);
+        
+      setRecommendedBooks(recommendedSample);
+    }
+  }, [isAdmin, books, borrowedBooks, getUserBorrowedBooks]);
+  
+  // Format date to "Apr 15, 2025" format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
     });
-    
-    setOverdueBooks(overdue);
-  }, [borrowedBooks]);
+  };
+  
+  // Generate rating display
+  const renderRating = (rating: number) => {
+    return (
+      <div className="flex items-center">
+        <span className="text-blue-500 mr-1">★</span>
+        <span>{rating.toFixed(1)}</span>
+      </div>
+    );
+  };
   
   return (
-    <PageLayout title="Overview">
-      <div className="grid gap-6">
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <PageLayout title="My Dashboard">
+      <div className="space-y-6">
+        {/* Time range filters */}
+        <div className="flex justify-end">
+          <div className="inline-flex rounded-md shadow-sm">
+            <Button
+              variant={timeRange === "all" ? "default" : "outline"}
+              className="rounded-l-md rounded-r-none"
+              onClick={() => setTimeRange("all")}
+            >
+              All Time
+            </Button>
+            <Button
+              variant={timeRange === "month" ? "default" : "outline"}
+              className="rounded-none border-x-0"
+              onClick={() => setTimeRange("month")}
+            >
+              This Month
+            </Button>
+            <Button
+              variant={timeRange === "year" ? "default" : "outline"}
+              className="rounded-r-md rounded-l-none"
+              onClick={() => setTimeRange("year")}
+            >
+              This Year
+            </Button>
+          </div>
+        </div>
+      
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Borrowed books</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Currently Borrowed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-4xl font-bold">{borrowedCount}</div>
-                <div className="stat-up">
-                  <ArrowUpIcon className="h-4 w-4 mr-1" /> 12%
+              <div className="flex items-center">
+                <div className="mr-4">
+                  <BookOpen className="h-8 w-8 text-muted-foreground/70" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Overdue books</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-4xl font-bold">{overdueBooks.length}</div>
                 <div>
-                  <span className="badge-warning">
-                    {overdueBooks.length} pending
-                  </span>
+                  <div className="text-4xl font-bold">{currentlyBorrowed}</div>
+                  <div className="text-xs text-muted-foreground">Out of 5 allowed</div>
                 </div>
               </div>
             </CardContent>
@@ -95,240 +141,151 @@ const Dashboard = () => {
           
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">New members</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Next Due Date</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-4xl font-bold">24</div>
-                <div className="stat-up">
-                  <ArrowUpIcon className="h-4 w-4 mr-1" /> 7%
+              <div className="flex items-center">
+                <div className="mr-4">
+                  <Calendar className="h-8 w-8 text-muted-foreground/70" />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Requested books</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline justify-between">
-                <div className="text-4xl font-bold">{pendingRequests}</div>
                 <div>
-                  <span className="badge-warning">
-                    {pendingRequests} pending
-                  </span>
+                  {nextDueDate ? (
+                    <>
+                      <div className="text-4xl font-bold">{formatDate(nextDueDate.date).replace(',', '')}</div>
+                      <div className="text-xs text-muted-foreground">{nextDueDate.daysRemaining} days remaining</div>
+                    </>
+                  ) : (
+                    <div className="text-md">No books due</div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Books Read</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center">
+                <div className="mr-4">
+                  <Clock className="h-8 w-8 text-muted-foreground/70" />
+                </div>
+                <div>
+                  <div className="text-4xl font-bold">{booksRead}</div>
+                  <div className="text-xs text-green-600 flex items-center">
+                    <ArrowUpIcon className="h-3 w-3 mr-1" /> 4 from last period
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Requested Books */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Overdue book list</CardTitle>
-                <CardDescription>Books that are past their due date</CardDescription>
-              </div>
-              <Button variant="ghost" size="icon">
-                <RefreshCwIcon className="h-4 w-4" />
-              </Button>
+        {/* Borrowed Books and Recommendations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>My Borrowed Books</span>
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">Books you currently have checked out</p>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Overdue</TableHead>
-                    <TableHead>Fine</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>22345</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://i.pravatar.cc/150?img=32" />
-                          <AvatarFallback>AB</AvatarFallback>
-                        </Avatar>
-                        <span>Annette Black</span>
+              <div className="space-y-6">
+                {userBorrowedBooks
+                  .filter(book => book.status === "borrowed")
+                  .map((borrowed) => (
+                    <div key={borrowed.id} className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-16 bg-muted flex-shrink-0 rounded overflow-hidden">
+                          <img
+                            src={borrowed.book.coverImage || "/placeholder.svg"}
+                            alt={borrowed.book.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">{borrowed.book.title}</h4>
+                          <p className="text-sm text-muted-foreground">{borrowed.book.author}</p>
+                          <div className="mt-1">
+                            <div className="text-xs">
+                              <span className="text-muted-foreground">Borrowed: </span>
+                              {formatDate(borrowed.borrowDate)}
+                            </div>
+                            <div className="text-xs">
+                              <span className="text-muted-foreground">Due: </span>
+                              {formatDate(borrowed.dueDate)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell>1 day</TableCell>
-                    <TableCell>
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
-                        Rs. 100
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>21342</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://i.pravatar.cc/150?img=44" />
-                          <AvatarFallback>DR</AvatarFallback>
-                        </Avatar>
-                        <span>Darlene Robertson</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>2 days</TableCell>
-                    <TableCell>
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
-                        Rs. 120
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>12007</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://i.pravatar.cc/150?img=59" />
-                          <AvatarFallback>JJ</AvatarFallback>
-                        </Avatar>
-                        <span>Jacob Jones</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>2 days</TableCell>
-                    <TableCell>
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
-                        Rs. 120
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>32143</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://i.pravatar.cc/150?img=47" />
-                          <AvatarFallback>AM</AvatarFallback>
-                        </Avatar>
-                        <span>Arlene McCoy</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>2 days</TableCell>
-                    <TableCell>
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
-                        Rs. 120
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>28653</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src="https://i.pravatar.cc/150?img=12" />
-                          <AvatarFallback>CW</AvatarFallback>
-                        </Avatar>
-                        <span>Cameron Williamson</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>3 days</TableCell>
-                    <TableCell>
-                      <span className="bg-red-100 text-red-800 px-2 py-1 rounded-md text-xs font-medium">
-                        Rs. 140
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-              <div className="mt-4 flex justify-end">
-                <Button variant="ghost">See all</Button>
+                      <Button variant="outline" size="sm">Renew</Button>
+                    </div>
+                  ))}
+                
+                {userBorrowedBooks.filter(book => book.status === "borrowed").length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-muted-foreground">No books currently borrowed</p>
+                    <Button variant="outline" className="mt-2">Browse Books</Button>
+                  </div>
+                )}
+                
+                {userBorrowedBooks.filter(book => book.status === "borrowed").length > 0 && (
+                  <div className="flex justify-end">
+                    <Button variant="ghost" size="sm">View All</Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader>
-              <CardTitle>Requested books</CardTitle>
-              <CardDescription>Recent book requests</CardDescription>
+              <CardTitle>Recommended For You</CardTitle>
+              <p className="text-sm text-muted-foreground">Based on your reading history</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-background border rounded-lg p-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-16 h-16 bg-muted flex-shrink-0 rounded overflow-hidden">
-                    <img
-                      src="https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                      alt="Book cover"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Milk and Honey</h4>
-                    <p className="text-sm text-muted-foreground">Ruth Wong</p>
-                    <div className="text-xs mt-1 flex justify-between items-center">
-                      <span className="text-muted-foreground">2B - 112</span>
-                      <span className="font-medium">Requested by</span>
+            <CardContent>
+              <div className="space-y-6">
+                {recommendedBooks.slice(0, 2).map((book) => (
+                  <div key={book.id} className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-16 bg-muted flex-shrink-0 rounded overflow-hidden">
+                        <img
+                          src={book.coverImage || "/placeholder.svg"}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-medium">{book.title}</h4>
+                        <p className="text-sm text-muted-foreground">{book.author}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {book.id === "1" && (
+                            <div className="flex items-center">
+                              <span className="text-blue-500 mr-1">★</span>
+                              <span className="text-sm">4.8</span>
+                              <span className="mx-2 text-muted-foreground">•</span>
+                              <span className="text-sm text-muted-foreground">Science Fiction</span>
+                            </div>
+                          )}
+                          {book.id === "2" && (
+                            <div className="flex items-center">
+                              <span className="text-blue-500 mr-1">★</span>
+                              <span className="text-sm">4.7</span>
+                              <span className="mx-2 text-muted-foreground">•</span>
+                              <span className="text-sm text-muted-foreground">Fantasy</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback>AF</AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs">Albert Flores</span>
-                      <span className="text-xs text-muted-foreground">12 Nov, 22</span>
-                    </div>
+                    <Button className="bg-blue-500 hover:bg-blue-600">Reserve</Button>
                   </div>
-                </div>
-              </div>
-              
-              <div className="bg-background border rounded-lg p-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-16 h-16 bg-muted flex-shrink-0 rounded overflow-hidden">
-                    <img
-                      src="https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2952&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                      alt="Book cover"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Milk and Honey</h4>
-                    <p className="text-sm text-muted-foreground">Esther Howard</p>
-                    <div className="text-xs mt-1 flex justify-between items-center">
-                      <span className="text-muted-foreground">1A - 100</span>
-                      <span className="font-medium">Requested by</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback>AB</AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs">Annette Black</span>
-                      <span className="text-xs text-muted-foreground">12 Nov, 22</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-background border rounded-lg p-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-16 h-16 bg-muted flex-shrink-0 rounded overflow-hidden">
-                    <img
-                      src="https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                      alt="Book cover"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div>
-                    <h4 className="font-medium">Milk and Honey</h4>
-                    <p className="text-sm text-muted-foreground">Brooklyn Simmons</p>
-                    <div className="text-xs mt-1 flex justify-between items-center">
-                      <span className="text-muted-foreground">2A - 002</span>
-                      <span className="font-medium">Requested by</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback>CF</AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs">Cody Fisher</span>
-                      <span className="text-xs text-muted-foreground">11 Nov, 22</span>
-                    </div>
-                  </div>
+                ))}
+                
+                <div className="flex justify-end">
+                  <Button variant="ghost" size="sm">View All</Button>
                 </div>
               </div>
             </CardContent>

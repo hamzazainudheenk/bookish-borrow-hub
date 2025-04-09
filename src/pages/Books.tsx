@@ -1,21 +1,21 @@
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { Book as BookType } from "@/types";
 import { useBooks } from "@/context/BookContext";
-import { useAuth } from "@/context/AuthContext";
-import { Eye, Edit, Trash2, Plus, BookOpen, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -25,554 +25,270 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-
-const bookFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  author: z.string().min(1, "Author is required"),
-  isbn: z.string().min(1, "ISBN is required"),
-  category: z.string().min(1, "Category is required"),
-  publishedYear: z.coerce.number().min(1000, "Invalid year").max(new Date().getFullYear()),
-  totalCopies: z.coerce.number().min(1, "At least 1 copy is required"),
-  availableCopies: z.coerce.number().min(0, "Cannot be negative"),
-  description: z.string().optional(),
-  location: z.string().optional(),
-  coverImage: z.string().optional(),
-});
-
-type BookFormValues = z.infer<typeof bookFormSchema>;
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MoreHorizontal, Plus, Search } from "lucide-react";
+import { Book } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 const Books = () => {
-  const { books, addBook, updateBook, deleteBook, borrowBook, requestBook, isLoading } = useBooks();
-  const { isAdmin } = useAuth();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [dialogType, setDialogType] = useState<"add" | "edit" | "view">("add");
-  const [selectedBook, setSelectedBook] = useState<BookType | null>(null);
+  const { books, addBook: addNewBook, updateBook, deleteBook } = useBooks();
+  const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  const form = useForm<BookFormValues>({
-    resolver: zodResolver(bookFormSchema),
-    defaultValues: {
+  const [formData, setFormData] = useState({
+    title: "",
+    author: "",
+    isbn: "",
+    category: "",
+    publishedYear: 2000,
+    availableCopies: 1,
+    totalCopies: 1,
+    description: "",
+    coverImage: "",
+    location: "",
+  });
+  const { toast } = useToast();
+
+  const filteredBooks = books.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Fix the addBook function to ensure all required properties in Book type are provided
+  const addBook = (formData: any) => {
+    const newBook: Omit<Book, "id"> = {
+      title: formData.title,             // Required fields must be included
+      author: formData.author,
+      isbn: formData.isbn,
+      category: formData.category,
+      publishedYear: formData.publishedYear,
+      availableCopies: formData.availableCopies,
+      totalCopies: formData.totalCopies,
+      // Optional fields
+      description: formData.description || "",
+      coverImage: formData.coverImage || "",
+      location: formData.location || ""
+    };
+    
+    addNewBook(newBook);
+    setIsDialogOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    addBook(formData);
+    setFormData({
       title: "",
       author: "",
       isbn: "",
       category: "",
-      publishedYear: new Date().getFullYear(),
-      totalCopies: 1,
+      publishedYear: 2000,
       availableCopies: 1,
+      totalCopies: 1,
       description: "",
-      location: "",
       coverImage: "",
-    },
-  });
-  
-  // Filter books based on search and category
-  const filteredBooks = books.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          book.isbn.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = !selectedCategory || book.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
-  
-  // Get unique categories for filter
-  const categories = [...new Set(books.map(book => book.category))];
-  
-  const openAddDialog = () => {
-    form.reset();
-    setDialogType("add");
-    setSelectedBook(null);
-    setIsDialogOpen(true);
-  };
-  
-  const openEditDialog = (book: BookType) => {
-    form.reset({
-      title: book.title,
-      author: book.author,
-      isbn: book.isbn,
-      category: book.category,
-      publishedYear: book.publishedYear,
-      totalCopies: book.totalCopies,
-      availableCopies: book.availableCopies,
-      description: book.description || "",
-      location: book.location || "",
-      coverImage: book.coverImage || "",
+      location: "",
     });
-    setDialogType("edit");
-    setSelectedBook(book);
-    setIsDialogOpen(true);
   };
-  
-  const openViewDialog = (book: BookType) => {
-    setDialogType("view");
-    setSelectedBook(book);
-    setIsDialogOpen(true);
+
+  const handleDeleteBook = (id: string) => {
+    deleteBook(id);
   };
-  
-  const handleSubmit = async (data: BookFormValues) => {
-    try {
-      if (dialogType === "add") {
-        await addBook(data);
-      } else if (dialogType === "edit" && selectedBook) {
-        await updateBook(selectedBook.id, data);
-      }
-      setIsDialogOpen(false);
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    }
-  };
-  
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this book?")) {
-      try {
-        await deleteBook(id);
-      } catch (error) {
-        console.error("Error deleting book:", error);
-      }
-    }
-  };
-  
-  const handleBorrowRequest = async (book: BookType) => {
-    try {
-      if (book.availableCopies > 0) {
-        await borrowBook(book.id);
-      } else {
-        await requestBook(book.id);
-      }
-    } catch (error) {
-      console.error("Error borrowing/requesting book:", error);
-    }
-  };
-  
+
   return (
-    <PageLayout 
-      title="Books" 
-      subtitle="Manage your library collection"
-      onSearch={query => setSearchTerm(query)}
-    >
-      <div className="mb-6 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Category
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => setSelectedCategory(null)}>
-                All Categories
-              </DropdownMenuItem>
-              {categories.map(category => (
-                <DropdownMenuItem 
-                  key={category} 
-                  onClick={() => setSelectedCategory(category)}
-                >
-                  {category}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          {selectedCategory && (
-            <Badge variant="outline" className="px-3 py-1">
-              {selectedCategory}
-              <button
-                className="ml-2 text-xs"
-                onClick={() => setSelectedCategory(null)}
-              >
-                ×
-              </button>
-            </Badge>
-          )}
+    <PageLayout title="Books" subtitle="Manage library books" onSearch={handleSearch}>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <p className="text-muted-foreground">Total books: {books.length}</p>
         </div>
-        
-        {isAdmin && (
-          <Button onClick={openAddDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Book
-          </Button>
-        )}
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredBooks.map(book => (
-          <Card key={book.id} className="overflow-hidden">
-            <div className="relative aspect-[3/4] bg-muted">
-              {book.coverImage ? (
-                <img
-                  src={book.coverImage}
-                  alt={`Cover of ${book.title}`}
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full bg-secondary">
-                  <BookOpen className="h-12 w-12 text-muted-foreground" />
-                </div>
-              )}
-              <Badge className="absolute top-2 right-2">
-                {book.availableCopies} / {book.totalCopies}
-              </Badge>
-            </div>
-            
-            <CardHeader className="py-3">
-              <CardTitle className="text-lg truncate">{book.title}</CardTitle>
-              <CardDescription>{book.author}</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="py-0">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">{book.isbn}</span>
-                <Badge variant="outline">{book.category}</Badge>
-              </div>
-            </CardContent>
-            
-            <CardFooter className="flex justify-between py-3">
-              <Button variant="ghost" size="sm" onClick={() => openViewDialog(book)}>
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Button>
-              
-              <div className="space-x-1">
-                {isAdmin && (
-                  <>
-                    <Button 
-                      variant="ghost" 
-                      size="icon"
-                      onClick={() => openEditDialog(book)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="text-destructive"
-                      onClick={() => handleDelete(book.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-                
-                <Button 
-                  variant={book.availableCopies > 0 ? "default" : "outline"} 
-                  size="sm"
-                  onClick={() => handleBorrowRequest(book)}
-                  disabled={isLoading}
-                >
-                  {book.availableCopies > 0 ? "Borrow" : "Request"}
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      
-      {filteredBooks.length === 0 && (
-        <div className="text-center py-10">
-          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground" />
-          <h3 className="mt-4 text-lg font-medium">No books found</h3>
-          <p className="text-muted-foreground">
-            {searchTerm || selectedCategory 
-              ? "Try changing your search or filters" 
-              : "Start by adding books to your library"}
-          </p>
-        </div>
-      )}
-      
-      {/* Book Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogType === "add" 
-                ? "Add New Book" 
-                : dialogType === "edit" 
-                  ? "Edit Book" 
-                  : "Book Details"}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogType === "view" 
-                ? "View book details" 
-                : "Fill in the book information below"}
-            </DialogDescription>
-          </DialogHeader>
-          
-          {dialogType === "view" && selectedBook ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="aspect-[3/4] bg-muted rounded-md overflow-hidden">
-                {selectedBook.coverImage ? (
-                  <img
-                    src={selectedBook.coverImage}
-                    alt={`Cover of ${selectedBook.title}`}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <BookOpen className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <h3 className="text-xl font-bold">{selectedBook.title}</h3>
-                <p className="text-muted-foreground mb-4">{selectedBook.author}</p>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">ISBN:</span>
-                    <span className="font-medium">{selectedBook.isbn}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Category:</span>
-                    <Badge variant="outline">{selectedBook.category}</Badge>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Published:</span>
-                    <span>{selectedBook.publishedYear}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Copies:</span>
-                    <span>
-                      {selectedBook.availableCopies} available / {selectedBook.totalCopies} total
-                    </span>
-                  </div>
-                  
-                  {selectedBook.location && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Location:</span>
-                      <span>{selectedBook.location}</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium mb-1">Description</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedBook.description || "No description available"}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="md:col-span-2 flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Close
-                </Button>
-                <Button 
-                  onClick={() => handleBorrowRequest(selectedBook)}
-                  disabled={isLoading}
-                >
-                  {selectedBook.availableCopies > 0 ? "Borrow Book" : "Request Book"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Book
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Book</DialogTitle>
+              <DialogDescription>Create a new book in the library</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
                     name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Title</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="author"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Author</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="isbn"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>ISBN</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Category</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="publishedYear"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Published Year</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
-                            disabled={dialogType === "view"} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="totalCopies"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Total Copies</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              disabled={dialogType === "view"} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="availableCopies"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Available</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              disabled={dialogType === "view"} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Location</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="coverImage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cover Image URL</FormLabel>
-                        <FormControl>
-                          <Input {...field} disabled={dialogType === "view"} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            rows={4} 
-                            disabled={dialogType === "view"} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    value={formData.title}
+                    onChange={handleChange}
+                    placeholder="Enter book title"
+                    required
                   />
                 </div>
-                
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {dialogType === "add" ? "Add Book" : "Save Changes"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          )}
-        </DialogContent>
-      </Dialog>
+                <div className="grid gap-2">
+                  <Label htmlFor="author">Author</Label>
+                  <Input
+                    id="author"
+                    name="author"
+                    value={formData.author}
+                    onChange={handleChange}
+                    placeholder="Enter author name"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="isbn">ISBN</Label>
+                  <Input
+                    id="isbn"
+                    name="isbn"
+                    value={formData.isbn}
+                    onChange={handleChange}
+                    placeholder="Enter ISBN"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    placeholder="Enter category"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="publishedYear">Published Year</Label>
+                  <Input
+                    id="publishedYear"
+                    name="publishedYear"
+                    type="number"
+                    value={formData.publishedYear}
+                    onChange={handleChange}
+                    placeholder="Enter published year"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="availableCopies">Available Copies</Label>
+                  <Input
+                    id="availableCopies"
+                    name="availableCopies"
+                    type="number"
+                    value={formData.availableCopies}
+                    onChange={handleChange}
+                    placeholder="Enter available copies"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="totalCopies">Total Copies</Label>
+                  <Input
+                    id="totalCopies"
+                    name="totalCopies"
+                    type="number"
+                    value={formData.totalCopies}
+                    onChange={handleChange}
+                    placeholder="Enter total copies"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Enter description"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="coverImage">Cover Image URL</Label>
+                  <Input
+                    id="coverImage"
+                    name="coverImage"
+                    value={formData.coverImage}
+                    onChange={handleChange}
+                    placeholder="Enter cover image URL"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    placeholder="Enter location"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit">Add Book</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Author</TableHead>
+              <TableHead>ISBN</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredBooks.map((book) => (
+              <TableRow key={book.id}>
+                <TableCell>{book.title}</TableCell>
+                <TableCell>{book.author}</TableCell>
+                <TableCell>{book.isbn}</TableCell>
+                <TableCell>{book.category}</TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() =>
+                          updateBook(book.id, { title: book.title + " (Edited)" })
+                        }
+                      >
+                        Edit Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteBook(book.id)} className="text-destructive">
+                        Delete Book
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </PageLayout>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types";
@@ -22,12 +21,14 @@ const MOCK_USERS: User[] = [
     name: "Admin User",
     email: "admin@bibliomane.com",
     role: "admin",
+    avatar: "https://i.pravatar.cc/150?img=12"
   },
   {
     id: "2",
     name: "Regular User",
     email: "user@bibliomane.com",
     role: "user",
+    avatar: "https://i.pravatar.cc/150?img=33"
   },
 ];
 

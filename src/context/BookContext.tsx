@@ -19,142 +19,155 @@ interface BookContextType {
   rejectRequest: (requestId: string) => Promise<void>;
   getUserBorrowedBooks: () => BorrowedBook[];
   getUserRequestedBooks: () => RequestedBook[];
+  renewBook: (borrowId: string) => Promise<void>;
 }
 
-// Mock data
-const MOCK_BOOKS: Book[] = [
+// Real book data
+const REAL_BOOKS: Book[] = [
   {
     id: "1",
-    title: "Milk and Honey",
-    author: "Ruth Wang",
-    isbn: "2B-112",
-    category: "Poetry",
-    publishedYear: 2015,
-    availableCopies: 5,
-    totalCopies: 10,
-    coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    description: "A collection of poetry and prose about survival, the experience of violence, abuse, love, loss, and femininity."
+    title: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
+    isbn: "978-0743273565",
+    category: "Classic",
+    publishedYear: 1925,
+    availableCopies: 3,
+    totalCopies: 5,
+    coverImage: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "The Great Gatsby is a 1925 novel by American writer F. Scott Fitzgerald. Set in the Jazz Age on Long Island, near New York City, the novel depicts first-person narrator Nick Carraway's interactions with mysterious millionaire Jay Gatsby and Gatsby's obsession to reunite with his former lover, Daisy Buchanan.",
+    rating: 4.3,
+    location: "Fiction Section - Shelf A3"
   },
   {
     id: "2",
-    title: "Milk and Honey",
-    author: "Esther Howard",
-    isbn: "1A-100",
-    category: "Poetry",
-    publishedYear: 2016,
-    availableCopies: 3,
-    totalCopies: 5,
-    coverImage: "https://images.unsplash.com/photo-1589998059171-988d887df646?q=80&w=2952&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    description: "A collection of poetry and prose about survival."
+    title: "To Kill a Mockingbird",
+    author: "Harper Lee",
+    isbn: "978-0061120084",
+    category: "Classic",
+    publishedYear: 1960,
+    availableCopies: 2,
+    totalCopies: 4,
+    coverImage: "https://images.unsplash.com/photo-1495640452828-3df6795cf69b?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "To Kill a Mockingbird is a novel by the American author Harper Lee. It was published in 1960 and has become a classic of modern American literature. The plot and characters are loosely based on the author's observations of her family, her neighbors and an event that occurred near her hometown of Monroeville, Alabama, in 1936, when she was ten.",
+    rating: 4.5,
+    location: "Fiction Section - Shelf B2"
   },
   {
     id: "3",
-    title: "Milk and Honey",
-    author: "Brooklyn Simmons",
-    isbn: "2A-002",
-    category: "Poetry",
-    publishedYear: 2017,
-    availableCopies: 2,
-    totalCopies: 4,
-    coverImage: "https://images.unsplash.com/photo-1495640388908-05fa85288e61?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    description: "A collection of poetry and prose."
+    title: "1984",
+    author: "George Orwell",
+    isbn: "978-0451524935",
+    category: "Dystopian",
+    publishedYear: 1949,
+    availableCopies: 1,
+    totalCopies: 3,
+    coverImage: "https://images.unsplash.com/photo-1571167366136-b57e07761625?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "1984 is a dystopian novel by English novelist George Orwell. It was published in June 1949 by Secker & Warburg as Orwell's ninth and final book completed in his lifetime. The story was mostly written at Barnhill, a farmhouse on the Scottish island of Jura, at times while Orwell suffered from severe tuberculosis.",
+    rating: 4.6,
+    location: "Fiction Section - Shelf C1"
   },
   {
     id: "4",
-    title: "Milk and Honey",
-    author: "Devon Lane",
-    isbn: "1C-092",
-    category: "Poetry",
-    publishedYear: 2018,
+    title: "Pride and Prejudice",
+    author: "Jane Austen",
+    isbn: "978-0141439518",
+    category: "Romance",
+    publishedYear: 1813,
+    availableCopies: 2,
+    totalCopies: 3,
+    coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "Pride and Prejudice is an 1813 romantic novel of manners written by Jane Austen. The novel follows the character development of Elizabeth Bennet, the dynamic protagonist of the book who learns about the repercussions of hasty judgments and comes to appreciate the difference between superficial goodness and actual goodness.",
+    rating: 4.2,
+    location: "Fiction Section - Shelf A1"
+  },
+  {
+    id: "5",
+    title: "Dune",
+    author: "Frank Herbert",
+    isbn: "978-0441172719",
+    category: "Science Fiction",
+    publishedYear: 1965,
+    availableCopies: 3,
+    totalCopies: 5,
+    coverImage: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "Dune is a 1965 science fiction novel by American author Frank Herbert, originally published as two separate serials in Analog magazine. It tied with Roger Zelazny's This Immortal for the Hugo Award in 1966, and it won the inaugural Nebula Award for Best Novel.",
+    rating: 4.8,
+    location: "Science Fiction - Shelf D2"
+  },
+  {
+    id: "6",
+    title: "The Hobbit",
+    author: "J.R.R. Tolkien",
+    isbn: "978-0547928227",
+    category: "Fantasy",
+    publishedYear: 1937,
     availableCopies: 1,
     totalCopies: 3,
-    coverImage: "https://images.unsplash.com/photo-1513001900722-370f803f498d?q=80&w=2787&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    description: "A collection of poetry."
-  },
+    coverImage: "https://images.unsplash.com/photo-1629992101753-56d196c8aabb?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+    description: "The Hobbit, or There and Back Again is a children's fantasy novel by English author J. R. R. Tolkien. It was published on 21 September 1937 to wide critical acclaim, being nominated for the Carnegie Medal and awarded a prize from the New York Herald Tribune for best juvenile fiction.",
+    rating: 4.7,
+    location: "Fantasy - Shelf E4"
+  }
 ];
 
-const MOCK_BORROWED_BOOKS: BorrowedBook[] = [
+// Updated borrowed books data
+const REAL_BORROWED_BOOKS: BorrowedBook[] = [
   {
     id: "1",
     bookId: "1",
     userId: "2",
-    borrowDate: "2023-11-01",
-    dueDate: "2023-12-01",
+    borrowDate: "2025-03-30",
+    dueDate: "2025-04-15",
     status: "borrowed",
-    book: MOCK_BOOKS[0]
+    book: REAL_BOOKS[0],
+    renewsLeft: 2
   },
   {
     id: "2",
     bookId: "2",
-    userId: "1",
-    borrowDate: "2023-10-15",
-    dueDate: "2023-11-15",
-    status: "overdue",
-    book: MOCK_BOOKS[1]
+    userId: "2",
+    borrowDate: "2025-04-02", 
+    dueDate: "2025-04-18",
+    status: "borrowed",
+    book: REAL_BOOKS[1],
+    renewsLeft: 2
   },
   {
     id: "3",
     bookId: "3",
     userId: "2",
-    borrowDate: "2023-11-05",
-    dueDate: "2023-12-05",
-    returnDate: "2023-11-20",
+    borrowDate: "2025-03-15",
+    dueDate: "2025-04-05",
+    returnDate: "2025-04-02",
     status: "returned",
-    book: MOCK_BOOKS[2]
+    book: REAL_BOOKS[2]
   },
 ];
 
-const MOCK_REQUESTED_BOOKS: RequestedBook[] = [
+// Updated requested books
+const REAL_REQUESTED_BOOKS: RequestedBook[] = [
   {
     id: "1",
-    bookId: "1",
+    bookId: "5",
     userId: "2",
-    requestDate: "2023-11-22",
+    requestDate: "2025-04-08",
     status: "pending",
-    book: MOCK_BOOKS[0],
+    book: REAL_BOOKS[4],
     user: {
       id: "2",
-      name: "Albert Flores",
-      email: "albert@example.com",
-      role: "user",
+      name: "Regular User",
+      email: "user@bibliomane.com",
+      role: "user"
     }
-  },
-  {
-    id: "2",
-    bookId: "2",
-    userId: "1",
-    requestDate: "2023-11-22",
-    status: "pending",
-    book: MOCK_BOOKS[1],
-    user: {
-      id: "1",
-      name: "Annette Black",
-      email: "annette@example.com",
-      role: "user",
-    }
-  },
-  {
-    id: "3",
-    bookId: "3",
-    userId: "2",
-    requestDate: "2023-11-22",
-    status: "pending",
-    book: MOCK_BOOKS[2],
-    user: {
-      id: "3",
-      name: "Cody Fisher",
-      email: "cody@example.com",
-      role: "user",
-    }
-  },
+  }
 ];
 
 const BookContext = createContext<BookContextType | undefined>(undefined);
 
 export const BookProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [books, setBooks] = useState<Book[]>(MOCK_BOOKS);
-  const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>(MOCK_BORROWED_BOOKS);
-  const [requestedBooks, setRequestedBooks] = useState<RequestedBook[]>(MOCK_REQUESTED_BOOKS);
+  const [books, setBooks] = useState<Book[]>(REAL_BOOKS);
+  const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>(REAL_BORROWED_BOOKS);
+  const [requestedBooks, setRequestedBooks] = useState<RequestedBook[]>(REAL_REQUESTED_BOOKS);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -278,6 +291,7 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({ children
         dueDate: dueDate.toISOString().split('T')[0],
         status: "borrowed",
         book: { ...book, availableCopies: book.availableCopies - 1 },
+        renewsLeft: 2
       };
       
       setBorrowedBooks(prev => [...prev, newBorrow]);
@@ -334,11 +348,59 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast({
         title: "Book returned",
-        description: `Thank you for returning the book`,
+        description: `Thank you for returning "${borrowedBook.book.title}"`,
       });
     } catch (error) {
       toast({
         title: "Failed to return book",
+        description: error instanceof Error ? error.message : "Something went wrong",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renewBook = async (borrowId: string) => {
+    setIsLoading(true);
+    try {
+      // Find the borrowed book record
+      const borrowedBook = borrowedBooks.find(b => b.id === borrowId);
+      
+      if (!borrowedBook) {
+        throw new Error("Borrowed book record not found");
+      }
+      
+      if (!borrowedBook.renewsLeft || borrowedBook.renewsLeft <= 0) {
+        throw new Error("No renewals left for this book");
+      }
+      
+      // Calculate new due date (14 days from current due date)
+      const currentDueDate = new Date(borrowedBook.dueDate);
+      const newDueDate = new Date(currentDueDate);
+      newDueDate.setDate(newDueDate.getDate() + 14);
+      
+      // Update borrowed record
+      setBorrowedBooks(prev => 
+        prev.map(b => 
+          b.id === borrowId 
+            ? { 
+                ...b, 
+                dueDate: newDueDate.toISOString().split('T')[0],
+                renewsLeft: (b.renewsLeft ? b.renewsLeft - 1 : 0)
+              } 
+            : b
+        )
+      );
+      
+      toast({
+        title: "Book renewed",
+        description: `The book has been renewed until ${newDueDate.toLocaleDateString()}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to renew book",
         description: error instanceof Error ? error.message : "Something went wrong",
         variant: "destructive",
       });
@@ -457,6 +519,7 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status: "borrowed",
         book: { ...book, availableCopies: book.availableCopies - 1 },
         user: request.user,
+        renewsLeft: 2
       };
       
       setBorrowedBooks(prev => [...prev, newBorrow]);
@@ -528,6 +591,7 @@ export const BookProvider: React.FC<{ children: React.ReactNode }> = ({ children
     rejectRequest,
     getUserBorrowedBooks,
     getUserRequestedBooks,
+    renewBook,
   };
 
   return <BookContext.Provider value={value}>{children}</BookContext.Provider>;

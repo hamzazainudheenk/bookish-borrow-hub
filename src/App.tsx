@@ -16,6 +16,9 @@ import RequestedBooks from "./pages/RequestedBooks";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
+import Users from "./pages/Users";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -30,9 +33,12 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/index" element={<Index />} />
                 <Route path="/books" element={<Books />} />
                 <Route path="/borrowed" element={<BorrowedBooks />} />
                 <Route path="/requested" element={<RequestedBooks />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/users" element={<Users />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

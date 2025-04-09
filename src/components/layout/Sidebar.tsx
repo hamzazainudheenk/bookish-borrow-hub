@@ -1,10 +1,21 @@
 
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Book, BarChart3, Users, Clock, FileQuestion, Wrench, HelpCircle, LogOut } from "lucide-react";
+import { 
+  Book, 
+  BarChart3, 
+  Users, 
+  Clock, 
+  FileQuestion, 
+  Settings, 
+  HelpCircle, 
+  LogOut, 
+  History, 
+  User 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 export const Sidebar = () => {
@@ -40,12 +51,27 @@ export const Sidebar = () => {
         <nav className="space-y-1">
           <NavLink to="/" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
             <BarChart3 className="sidebar-icon" />
-            {!collapsed && <span>Overview</span>}
+            {!collapsed && <span>Dashboard</span>}
           </NavLink>
           
           <NavLink to="/books" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
             <Book className="sidebar-icon" />
-            {!collapsed && <span>Books</span>}
+            {!collapsed && <span>Browse Books</span>}
+          </NavLink>
+          
+          <NavLink to="/borrowed" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
+            <Clock className="sidebar-icon" />
+            {!collapsed && <span>My Borrowed Books</span>}
+          </NavLink>
+
+          <NavLink to="/requested" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
+            <FileQuestion className="sidebar-icon" />
+            {!collapsed && <span>Book Requests</span>}
+          </NavLink>
+
+          <NavLink to="/history" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
+            <History className="sidebar-icon" />
+            {!collapsed && <span>Reading History</span>}
           </NavLink>
           
           {isAdmin && (
@@ -55,18 +81,8 @@ export const Sidebar = () => {
             </NavLink>
           )}
           
-          <NavLink to="/borrowed" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
-            <Clock className="sidebar-icon" />
-            {!collapsed && <span>Borrowed books</span>}
-          </NavLink>
-          
-          <NavLink to="/requested" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
-            <FileQuestion className="sidebar-icon" />
-            {!collapsed && <span>Requested books</span>}
-          </NavLink>
-          
           <NavLink to="/settings" className={({ isActive }) => cn("sidebar-link", isActive && "active")}>
-            <Wrench className="sidebar-icon" />
+            <Settings className="sidebar-icon" />
             {!collapsed && <span>Settings</span>}
           </NavLink>
           
@@ -89,6 +105,7 @@ export const Sidebar = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Avatar>
+                <AvatarImage src={user?.avatar} />
                 <AvatarFallback>{user ? getInitials(user.name) : "?"}</AvatarFallback>
               </Avatar>
               <div className="ml-3">
