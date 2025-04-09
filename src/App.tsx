@@ -20,7 +20,7 @@ import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import Index from "./pages/Index";
 import DatabaseTables from "./pages/DatabaseTables";
-import ReadingHistoryPage from "./pages/History";
+import ReadingHistoryPage from "./pages/ReadingHistoryPage";
 
 const queryClient = new QueryClient();
 

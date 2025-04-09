@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { ReadingHistory as ReadingHistoryType } from "@/types";
+import { ReadingHistory } from "@/types";
 import {
   Card,
   CardContent,
@@ -44,10 +45,10 @@ import { fetchReadingHistory, addReviewToHistory } from "@/services/mockReadingH
 const ReadingHistoryPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [readingHistory, setReadingHistory] = useState<ReadingHistoryType[]>([]);
+  const [readingHistory, setReadingHistory] = useState<ReadingHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedHistory, setSelectedHistory] = useState<ReadingHistoryType | null>(null);
+  const [selectedHistory, setSelectedHistory] = useState<ReadingHistory | null>(null);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [review, setReview] = useState("");
   const [rating, setRating] = useState<number>(0);
