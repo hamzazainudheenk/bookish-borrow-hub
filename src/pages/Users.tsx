@@ -278,7 +278,8 @@ const Users = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="success">Active</Badge>
+                  {/* Fix: Change variant="success" to variant="default" with custom styling */}
+                  <Badge variant="default" className="bg-green-500 hover:bg-green-600">Active</Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
