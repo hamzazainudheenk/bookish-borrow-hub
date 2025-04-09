@@ -9,7 +9,174 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          author: string
+          available: boolean | null
+          category: string | null
+          cover_image: string | null
+          created_at: string | null
+          id: string
+          isbn: string | null
+          shelf_location: string | null
+          title: string
+        }
+        Insert: {
+          author: string
+          available?: boolean | null
+          category?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          isbn?: string | null
+          shelf_location?: string | null
+          title: string
+        }
+        Update: {
+          author?: string
+          available?: boolean | null
+          category?: string | null
+          cover_image?: string | null
+          created_at?: string | null
+          id?: string
+          isbn?: string | null
+          shelf_location?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      borrowed_books: {
+        Row: {
+          book_id: string | null
+          borrow_date: string | null
+          due_date: string
+          id: string
+          member_id: string | null
+          return_date: string | null
+          status: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          borrow_date?: string | null
+          due_date: string
+          id?: string
+          member_id?: string | null
+          return_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          borrow_date?: string | null
+          due_date?: string
+          id?: string
+          member_id?: string | null
+          return_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "borrowed_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "borrowed_books_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_visitors: {
+        Row: {
+          borrower_count: number | null
+          id: string
+          visit_date: string
+          visitor_count: number
+        }
+        Insert: {
+          borrower_count?: number | null
+          id?: string
+          visit_date: string
+          visitor_count?: number
+        }
+        Update: {
+          borrower_count?: number | null
+          id?: string
+          visit_date?: string
+          visitor_count?: number
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          avatar: string | null
+          email: string
+          id: string
+          joined_at: string | null
+          name: string
+          role: string | null
+        }
+        Insert: {
+          avatar?: string | null
+          email: string
+          id?: string
+          joined_at?: string | null
+          name: string
+          role?: string | null
+        }
+        Update: {
+          avatar?: string | null
+          email?: string
+          id?: string
+          joined_at?: string | null
+          name?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      requested_books: {
+        Row: {
+          book_id: string | null
+          id: string
+          member_id: string | null
+          request_date: string | null
+          status: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          id?: string
+          member_id?: string | null
+          request_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          id?: string
+          member_id?: string | null
+          request_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requested_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requested_books_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
