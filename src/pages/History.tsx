@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { ReadingHistory as ReadingHistoryType } from "@/types";
@@ -20,7 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,7 +38,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Book, History as HistoryIcon, Search, Star } from "lucide-react";
+import { Book, History as HistoryIcon, Star } from "lucide-react";
+import { fetchReadingHistory, addReviewToHistory } from "@/services/mockReadingHistoryService";
 
 const ReadingHistoryPage = () => {
   const { user } = useAuth();
@@ -55,59 +53,14 @@ const ReadingHistoryPage = () => {
   const [rating, setRating] = useState<number>(0);
 
   useEffect(() => {
-    const fetchReadingHistory = async () => {
+    const getReadingHistory = async () => {
       if (!user) return;
       
       setIsLoading(true);
       try {
-        // First get reading history
-        const { data: historyData, error: historyError } = await supabase
-          .from("reading_history")
-          .select("*")
-          .eq("member_id", user.id);
-          
-        if (historyError) throw historyError;
-        
-        if (!historyData || historyData.length === 0) {
-          setReadingHistory([]);
-          return;
-        }
-        
-        // Get book details for each history entry
-        const bookIds = historyData.map(h => h.book_id);
-        const { data: booksData, error: booksError } = await supabase
-          .from("books")
-          .select("*")
-          .in("id", bookIds);
-          
-        if (booksError) throw booksError;
-        
-        // Map reading history with book details
-        const mappedHistory: ReadingHistoryType[] = historyData.map(h => {
-          const book = booksData?.find(b => b.id === h.book_id);
-          return {
-            id: h.id,
-            userId: h.member_id,
-            bookId: h.book_id,
-            startDate: h.start_date,
-            finishDate: h.finish_date || undefined,
-            rating: h.rating || undefined,
-            review: h.review || undefined,
-            book: {
-              id: book?.id || "",
-              title: book?.title || "",
-              author: book?.author || "",
-              isbn: book?.isbn || "",
-              category: book?.category || "",
-              publishedYear: 0,
-              availableCopies: book?.available ? 1 : 0,
-              totalCopies: 1,
-              coverImage: book?.cover_image || undefined,
-            }
-          };
-        });
-        
-        setReadingHistory(mappedHistory);
+        // Use our mock service instead of Supabase
+        const historyData = await fetchReadingHistory(user.id);
+        setReadingHistory(historyData);
       } catch (error) {
         console.error("Error fetching reading history:", error);
         toast({
@@ -116,14 +69,14 @@ const ReadingHistoryPage = () => {
           variant: "destructive",
         });
         
-        // Use mock data if there's an error
+        // Set empty array on error
         setReadingHistory([]);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchReadingHistory();
+    getReadingHistory();
   }, [user, toast]);
 
   const handleSearch = (query: string) => {
@@ -139,23 +92,16 @@ const ReadingHistoryPage = () => {
     if (!selectedHistory) return;
     
     try {
-      const { error } = await supabase
-        .from("reading_history")
-        .update({
-          rating,
-          review,
-          finish_date: new Date().toISOString().split("T")[0],
-        })
-        .eq("id", selectedHistory.id);
-        
-      if (error) throw error;
+      // Use our mock service instead of Supabase
+      const updatedHistory = await addReviewToHistory(
+        selectedHistory.id,
+        review,
+        rating
+      );
       
       // Update local state
       setReadingHistory(prev => 
-        prev.map(h => h.id === selectedHistory.id 
-          ? { ...h, rating, review, finishDate: new Date().toISOString().split("T")[0] }
-          : h
-        )
+        prev.map(h => h.id === selectedHistory.id ? updatedHistory : h)
       );
       
       toast({
